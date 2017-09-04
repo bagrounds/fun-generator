@@ -6,7 +6,7 @@
   'use strict'
 
   /* imports */
-  var fn = require('fun-function')
+  var fun = require('fun-function')
   var object = require('fun-object')
   var guarded = require('guarded')
   var type = require('fun-type')
@@ -16,6 +16,7 @@
   var array = require('fun-array')
 
   var api = {
+    fn: fn,
     objectOf: objectOf,
     record: record,
     arrayOf: arrayOf,
@@ -32,20 +33,29 @@
   var isProbability = predicate.and(type.isNumber, isBetween0And1)
   var isCharacter = predicate.and(
     type.isString,
-    fn.compose(predicate.equal(1), array.length)
+    fun.compose(predicate.equal(1), array.length)
   )
 
-  var fstSndLengthEqual = fn.compose(
-    fn.argsToArray(predicate.equal),
+  var fstSndLengthEqual = fun.compose(
+    fun.argsToArray(predicate.equal),
     array.map(array.length)
   )
 
-  var fstSndObjLengthEqual = fn.compose(
-    fn.argsToArray(predicate.equal),
-    array.map(fn.compose(array.length, object.values))
+  var fstSndObjLengthEqual = fun.compose(
+    fun.argsToArray(predicate.equal),
+    array.map(fun.compose(array.length, object.values))
   )
 
   var guards = {
+    fn: guarded(
+      type.isTuple([
+        type.isFunction,
+        type.isFunction,
+        type.isFunction,
+        isProbability
+      ]),
+      type.isFunction
+    ),
     objectOf: guarded(
       type.isTuple([type.isFunction, type.isObject]),
       type.isObject
@@ -92,7 +102,26 @@
   }
 
   /* exports */
-  module.exports = object.map(fn.curry, object.ap(guards, api))
+  module.exports = object.map(fun.curry, object.ap(guards, api))
+
+  /**
+   *
+   * @function module:fun-generator.fn
+   *
+   * @param {Function} inputToP - a -> p
+   * @param {Function} outputGen - p -> b
+   * @param {Function} p2p - p -> p
+   * @param {Number} p - number on interval [0, 1)
+   *
+   * @return {Function} a -> b
+   */ // eslint-disable-next-line max-params
+  function fn (inputToP, outputGen, p2p, p) {
+    return fun.composeAll([
+      outputGen,
+      p2p.bind(null, p),
+      inputToP
+    ])
+  }
 
   /**
    *
@@ -156,7 +185,7 @@
    * @return {String} of length length(ps)
    */
   function string (alphabet, ps) {
-    return arrayOf(fn.curry(character)(alphabet), ps).join('')
+    return arrayOf(fun.curry(character)(alphabet), ps).join('')
   }
 
   /**

@@ -2,16 +2,59 @@
   'use strict'
 
   /* imports */
+  var fn = require('fun-function')
   var predicate = require('fun-predicate')
   var object = require('fun-object')
   var funTest = require('fun-test')
   var arrange = require('fun-arrange')
   var sample = require('fun-sample')
   var array = require('fun-array')
+  var type = require('fun-type')
 
   function pairBool (ps) {
     return array.ap([sample.boolean, sample.boolean], ps)
   }
+
+  function boolToP (bool) {
+    return bool ? 0.5 : 0
+  }
+
+  function inputToOutput (p, inP) {
+    var outP = p + inP
+    return outP >= 1 ? outP - 1 : outP
+  }
+
+  var funTests = [
+    {
+      inputs: [boolToP, sample.boolean, inputToOutput, 0.5],
+      predicate: fn.compose(
+        predicate.equal(false),
+        fn.apply([true])
+      ),
+      contra: object.get('fn')
+    },
+    {
+      inputs: [boolToP, sample.boolean, inputToOutput, 0.5],
+      predicate: fn.compose(
+        predicate.equal(true),
+        fn.apply([false])
+      ),
+      contra: object.get('fn')
+    },
+    {
+      inputs: [boolToP, sample.boolean, inputToOutput, 0],
+      predicate: fn.compose(
+        predicate.equal(false),
+        fn.apply([false])
+      ),
+      contra: object.get('fn')
+    },
+    {
+      inputs: [boolToP, sample.boolean, inputToOutput, 0],
+      predicate: type.isFunction,
+      contra: object.get('fn')
+    }
+  ]
 
   var tests = [
     [
@@ -68,6 +111,6 @@
     }))
 
   /* exports */
-  module.exports = tests.map(funTest.sync)
+  module.exports = funTests.concat(tests).map(funTest.sync)
 })()
 
