@@ -1,0 +1,2 @@
+funGenerator = require('..')
+

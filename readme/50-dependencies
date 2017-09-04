@@ -1,0 +1,10 @@
+## Dependencies
+
+### Without Tests
+
+![Dependencies](https://bagrounds.gitlab.io/fun-generator/img/dependencies.svg)
+
+### With Tests
+
+![Test Dependencies](https://bagrounds.gitlab.io/fun-generator/img/dependencies-test.svg)
+
