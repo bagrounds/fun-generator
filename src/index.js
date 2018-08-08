@@ -30,10 +30,10 @@
   }
 
   var isBetween0And1 = predicate.and(scalar.gte(0), scalar.lt(1))
-  var isProbability = predicate.and(type.isNumber, isBetween0And1)
+  var isProbability = predicate.and(type.num, isBetween0And1)
   var isCharacter = predicate.and(
-    type.isString,
-    fun.compose(predicate.equal(1), array.length)
+    type.string,
+    fun.compose(predicate.equal(1), s => s.length)
   )
 
   var fstSndLengthEqual = fun.compose(
@@ -46,60 +46,61 @@
     array.map(fun.compose(array.length, object.values))
   )
 
-  var guards = {
-    fn: guarded(
-      type.isTuple([
-        type.isFunction,
-        type.isFunction,
-        type.isFunction,
-        isProbability
-      ]),
-      type.isFunction
-    ),
-    objectOf: guarded(
-      type.isTuple([type.isFunction, type.isObject]),
-      type.isObject
-    ),
-    record: guarded(
-      predicate.and(
-        type.isTuple([type.isObject, type.isObject]),
-        fstSndObjLengthEqual
-      ),
-      type.isObject
-    ),
-    arrayOf: guarded(
-      type.isTuple([type.isFunction, type.isArray]),
-      type.isArray
-    ),
-    tuple: guarded(
-      predicate.and(
-        type.isTuple([type.isArray, type.isArray]),
-        fstSndLengthEqual
-      ),
-      type.isArray
-    ),
-    string: guarded(
-      type.isTuple([type.isString, type.isArrayOf(isProbability)]),
-      type.isString
-    ),
-    character: guarded(
-      type.isTuple([type.isString, isProbability]),
-      isCharacter
-    ),
-    boolean: guarded(type.isTuple([isProbability]), type.isBoolean),
-    integer: guarded(
-      type.isTuple([type.isNumber, type.isNumber, isProbability]),
-      type.isNumber
-    ),
-    number: guarded(
-      type.isTuple([type.isNumber, type.isNumber, isProbability]),
-      type.isNumber
-    ),
-    member: guarded(
-      type.isTuple([type.isArray, isProbability]),
-      type.any
-    )
-  }
+  var guards = object.map(
+    ([i, o]) => fun.compose(guarded.inputs(i), guarded.output(o)), {
+      fn: [
+        type.tuple([
+          type.fun,
+          type.fun,
+          type.fun,
+          isProbability
+        ]),
+        type.fun
+      ],
+      objectOf: [
+        type.tuple([type.fun, type.object]),
+        type.object
+      ],
+      record: [
+        predicate.and(
+          type.tuple([type.object, type.object]),
+          fstSndObjLengthEqual
+        ),
+        type.object
+      ],
+      arrayOf: [
+        type.tuple([type.fun, type.array]),
+        type.array
+      ],
+      tuple: [
+        predicate.and(
+          type.tuple([type.array, type.array]),
+          fstSndLengthEqual
+        ),
+        type.array
+      ],
+      string: [
+        type.tuple([type.string, type.arrayOf(isProbability)]),
+        type.string
+      ],
+      character: [
+        type.tuple([type.string, isProbability]),
+        isCharacter
+      ],
+      boolean: [type.tuple([isProbability]), type.bool],
+      integer: [
+        type.tuple([type.num, type.num, isProbability]),
+        type.num
+      ],
+      number: [
+        type.tuple([type.num, type.num, isProbability]),
+        type.num
+      ],
+      member: [
+        type.tuple([type.array, isProbability]),
+        type.any
+      ]
+    })
 
   /* exports */
   module.exports = object.map(fun.curry, object.ap(guards, api))

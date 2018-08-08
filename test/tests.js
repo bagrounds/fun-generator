@@ -51,7 +51,7 @@
     },
     {
       inputs: [boolToP, sample.boolean, inputToOutput, 0],
-      predicate: type.isFunction,
+      predicate: type.fun,
       contra: object.get('fn')
     }
   ]
@@ -105,12 +105,15 @@
     [[0, 10, 0.51], 5, 'integer'],
     [[0, 10, 0.51], 5.1, 'number']
   ].map(arrange({ inputs: 0, predicate: 1, contra: 2 }))
-    .map(object.ap({
+    .map(o => object.ap({
       predicate: predicate.equalDeep,
       contra: object.get
-    }))
+    }, o))
 
   /* exports */
-  module.exports = funTests.concat(tests).map(funTest.sync)
+  module.exports = funTests.concat(tests).map(x => {
+    console.log(x)
+    return funTest.sync(x)
+  })
 })()
 
