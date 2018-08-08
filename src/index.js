@@ -6,63 +6,41 @@
   'use strict'
 
   /* imports */
-  var fun = require('fun-function')
-  var object = require('fun-object')
-  var guarded = require('guarded')
-  var type = require('fun-type')
-  var predicate = require('fun-predicate')
-  var scalar = require('fun-scalar')
-  var sample = require('fun-sample')
-  var array = require('fun-array')
+  const { compose, composeAll, argsToArray, curry } = require('fun-function')
+  const object = require('fun-object')
+  const { inputs, output } = require('guarded')
+  const type = require('fun-type')
+  const { and, equal } = require('fun-predicate')
+  const { gte, lt } = require('fun-scalar')
+  const sample = require('fun-sample')
+  const { map, ap, length } = require('fun-array')
 
-  var api = {
-    fn: fn,
-    objectOf: objectOf,
-    record: record,
-    arrayOf: arrayOf,
-    tuple: tuple,
-    boolean: boolean,
-    string: string,
-    character: character,
-    integer: integer,
-    number: number,
-    member: member
-  }
-
-  var isBetween0And1 = predicate.and(scalar.gte(0), scalar.lt(1))
-  var isProbability = predicate.and(type.num, isBetween0And1)
-  var isCharacter = predicate.and(
+  const isBetween0And1 = and(gte(0), lt(1))
+  const isProbability = and(type.num, isBetween0And1)
+  const isCharacter = and(
     type.string,
-    fun.compose(predicate.equal(1), s => s.length)
+    compose(equal(1), s => s.length)
   )
 
-  var fstSndLengthEqual = fun.compose(
-    fun.argsToArray(predicate.equal),
-    array.map(array.length)
+  const fstSndLengthEqual = compose(
+    argsToArray(equal),
+    map(length)
   )
 
-  var fstSndObjLengthEqual = fun.compose(
-    fun.argsToArray(predicate.equal),
-    array.map(fun.compose(array.length, object.values))
+  const fstSndObjLengthEqual = compose(
+    argsToArray(equal),
+    map(compose(length, object.values))
   )
 
-  var guards = object.map(
-    ([i, o]) => fun.compose(guarded.inputs(i), guarded.output(o)), {
+  const guards = object.map(
+    ([i, o]) => compose(inputs(i), output(o)), {
       fn: [
-        type.tuple([
-          type.fun,
-          type.fun,
-          type.fun,
-          isProbability
-        ]),
+        type.tuple([type.fun, type.fun, type.fun, isProbability]),
         type.fun
       ],
-      objectOf: [
-        type.tuple([type.fun, type.object]),
-        type.object
-      ],
+      objectOf: [type.tuple([type.fun, type.object]), type.object],
       record: [
-        predicate.and(
+        and(
           type.tuple([type.object, type.object]),
           fstSndObjLengthEqual
         ),
@@ -73,7 +51,7 @@
         type.array
       ],
       tuple: [
-        predicate.and(
+        and(
           type.tuple([type.array, type.array]),
           fstSndLengthEqual
         ),
@@ -102,9 +80,6 @@
       ]
     })
 
-  /* exports */
-  module.exports = object.map(fun.curry, object.ap(guards, api))
-
   /**
    *
    * @function module:fun-generator.fn
@@ -116,13 +91,11 @@
    *
    * @return {Function} a -> b
    */ // eslint-disable-next-line max-params
-  function fn (inputToP, outputGen, p2p, p) {
-    return fun.composeAll([
-      outputGen,
-      p2p.bind(null, p),
-      inputToP
-    ])
-  }
+  const fn = (inputToP, outputGen, p2p, p) => composeAll([
+    outputGen,
+    p2p.bind(null, p),
+    inputToP
+  ])
 
   /**
    *
@@ -133,9 +106,7 @@
    *
    * @return {Object} { a }
    */
-  function objectOf (generator, ps) {
-    return object.map(generator, ps)
-  }
+  const objectOf = (generator, ps) => object.map(generator, ps)
 
   /**
    *
@@ -146,9 +117,7 @@
    *
    * @return {Object} record
    */
-  function record (generators, ps) {
-    return object.ap(generators, ps)
-  }
+  const record = (generators, ps) => object.ap(generators, ps)
 
   /**
    *
@@ -159,9 +128,7 @@
    *
    * @return {Array} [a]
    */
-  function arrayOf (generator, ps) {
-    return array.map(generator, ps)
-  }
+  const arrayOf = (generator, ps) => map(generator, ps)
 
   /**
    *
@@ -172,9 +139,7 @@
    *
    * @return {Array} tuple
    */
-  function tuple (generators, ps) {
-    return array.ap(generators, ps)
-  }
+  const tuple = (generators, ps) => ap(generators, ps)
 
   /**
    *
@@ -185,9 +150,8 @@
    *
    * @return {String} of length length(ps)
    */
-  function string (alphabet, ps) {
-    return arrayOf(fun.curry(character)(alphabet), ps).join('')
-  }
+  const string = (alphabet, ps) =>
+    arrayOf(curry(character)(alphabet), ps).join('')
 
   /**
    *
@@ -198,9 +162,7 @@
    *
    * @return {String} of length 1
    */
-  function character (string, p) {
-    return sample.member(string.split(''), p)
-  }
+  const character = (string, p) => sample.member(string.split(''), p)
 
   /**
    *
@@ -210,9 +172,7 @@
    *
    * @return {Boolean} true or false
    */
-  function boolean (p) {
-    return sample.member([false, true], p)
-  }
+  const boolean = (p) => sample.member([false, true], p)
 
   /**
    *
@@ -224,9 +184,7 @@
    *
    * @return {Number} integer on interval [min, max]
    */
-  function integer (min, max, p) {
-    return sample.integer(min, max, p)
-  }
+  const integer = (min, max, p) => sample.integer(min, max, p)
 
   /**
    *
@@ -237,9 +195,7 @@
    *
    * @return {*} an element of set
    */
-  function member (set, p) {
-    return sample.member(set, p)
-  }
+  const member = (set, p) => sample.member(set, p)
 
   /**
    *
@@ -251,8 +207,23 @@
    *
    * @return {Number} number on interval [min, max)
    */
-  function number (min, max, p) {
-    return sample.number(min, max, p)
+  const number = (min, max, p) => sample.number(min, max, p)
+
+  const api = {
+    fn,
+    objectOf,
+    record,
+    arrayOf,
+    tuple,
+    boolean,
+    string,
+    character,
+    integer,
+    number,
+    member
   }
+
+  /* exports */
+  module.exports = object.map(curry, object.ap(guards, api))
 })()
 
